@@ -1,0 +1,9 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+  <h2>Draft Posts</h2>
+  <ul>
+    {% for draft in drafts %}
+      <li><a href="{% url 'edit_post' draft.pk %}">{{ draft.title }}</a></li>
+    {% endfor %}
+  </ul>
+{% endblock %}
