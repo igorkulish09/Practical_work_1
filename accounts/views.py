@@ -8,6 +8,9 @@ from django.views.generic import ListView, DetailView
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from .forms import ContactForm
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.decorators.cache import cache_page
+from .tasks import send_email
 
 
 def register(request):
@@ -188,3 +191,43 @@ def contact_view(request):
     else:
         form = ContactForm()
     return render(request, 'accounts/contact.html', {'form': form})
+
+
+def post_list(request):
+    posts = Post.objects.all()
+    paginator = Paginator(posts, 10)  # Показувати 10 постів на сторінці
+
+    page = request.GET.get('page')
+    try:
+        posts = paginator.page(page)
+    except PageNotAnInteger:
+        posts = paginator.page(1)
+    except EmptyPage:
+        posts = paginator.page(paginator.num_pages)
+
+    return render(request, 'accounts/post_list.html', {'posts': posts})
+
+
+def comment_list(request, post_id):
+    post = Post.objects.get(id=post_id)
+    comments = Comment.objects.filter(post=post)
+    paginator = Paginator(comments, 10)  # Показувати 10 коментарів на сторінці
+
+    page = request.GET.get('page')
+    try:
+        comments = paginator.page(page)
+    except PageNotAnInteger:
+        comments = paginator.page(1)
+    except EmptyPage:
+        comments = paginator.page(paginator.num_pages)
+
+    return render(request, 'accounts/comment_list.html', {'post': post, 'comments': comments})
+
+
+@cache_page(60 * 15)
+def my_view(request):
+    send_email.delay('Subject', 'Message', 'from@example.com', ['to@example.com'])
+
+
+def my_view(request):
+    send_email.delay('Subject', 'Message', 'from@example.com', ['to@example.com'])
