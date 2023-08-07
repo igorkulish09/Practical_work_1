@@ -4,6 +4,10 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
+from django.views.generic import ListView, DetailView
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from .forms import ContactForm
 
 
 def register(request):
@@ -125,3 +129,62 @@ def add_comment(request, post_id):
         form = CommentForm()
 
     return render(request, 'accounts/add_comment.html', {'form': form})
+
+
+def all_posts(request):
+    posts = Post.objects.all()
+    return render(request, 'accounts/all_posts.html', {'posts': posts})
+
+
+@login_required
+def user_posts(request):
+    user = request.user
+    posts = Post.objects.filter(author=user)
+    return render(request, 'accounts/user_posts.html', {'posts': posts})
+
+
+def post_detail(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    return render(request, 'accounts/post_detail.html', {'post': post})
+
+
+class PostListView(ListView):
+    model = Post
+    template_name = 'accounts/all_posts.html'
+    context_object_name = 'posts'
+
+
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'accounts/post_detail.html'
+    context_object_name = 'post'
+
+
+class UserPostsView(ListView):
+    model = Post
+    template_name = 'accounts/user_posts.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        user = User.objects.get(pk=self.kwargs['pk'])
+        return Post.objects.filter(author=user)
+
+
+def user_profile(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    return render(request, 'accounts/user_profile.html', {'user': user})
+
+
+def contact_view(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            message = form.cleaned_data['message']
+            subject = f"New Contact Form Submission from {name}"
+            mail_message = f"From: {name}\nEmail: {email}\n\n{message}"
+            send_mail(subject, mail_message, 'your_email@example.com', ['admin@example.com'])
+    else:
+        form = ContactForm()
+    return render(request, 'accounts/contact.html', {'form': form})

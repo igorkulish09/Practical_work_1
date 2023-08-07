@@ -8,6 +8,9 @@
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/accounts/">My Account</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'accounts:user_profile' user.pk %}">Profile</a></li>
+        {% endif %}
         </ul>
     </nav>
 
