@@ -46,10 +46,6 @@ def home(request):
     return render(request, 'accounts/home.html')
 
 
-def home(request):
-    return render(request, 'accounts/home.html')
-
-
 @login_required
 def create_post(request):
     if request.method == 'POST':
@@ -70,7 +66,6 @@ def create_post(request):
 def edit_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
 
-    # Перевірка, чи користувач є власником поста
     if post.author != request.user:
         return render(request, 'accounts/access_denied.html')
 
@@ -225,9 +220,5 @@ def comment_list(request, post_id):
 
 
 @cache_page(60 * 15)
-def my_view(request):
-    send_email.delay('Subject', 'Message', 'from@example.com', ['to@example.com'])
-
-
 def my_view(request):
     send_email.delay('Subject', 'Message', 'from@example.com', ['to@example.com'])

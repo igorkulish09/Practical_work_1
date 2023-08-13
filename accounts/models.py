@@ -6,6 +6,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .utils import send_notification_email
 
+
 class CustomUser(AbstractUser):
     groups = models.ManyToManyField(Group, related_name="custom_users")
     user_permissions = models.ManyToManyField(Permission, related_name="custom_users")
@@ -16,14 +17,14 @@ class CustomUser(AbstractUser):
 
 class Post(models.Model):
     title = models.CharField(max_length=200)
-    content = models.TextField()  # Додайте це поле
+    content = models.TextField()
     short_description = models.TextField(max_length=200, default=timezone.now)
     full_description = models.TextField(default='', blank=True)
     image = models.ImageField(upload_to='post_images/', blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    is_published = models.BooleanField(default=False)
-    is_draft = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=True)
+    is_draft = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title
@@ -54,4 +55,3 @@ def send_comment_notification(sender, instance, created, **kwargs):
         subject = 'Новий коментар створено'
         message = f'Коментар автора {instance.author} до посту: {instance.post.title}\nТекст коментаря: {instance.text}'
         send_notification_email(subject, message)
-
